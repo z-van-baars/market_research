@@ -1,6 +1,7 @@
 import pygame
 from game_tile import GameTile
 import utilities
+import queue
 
 
 class Background(pygame.sprite.Sprite):
@@ -44,20 +45,22 @@ class Map(object):
         self.background.image.set_colorkey(utilities.colors.key)
 
     def world_scroll(self, shift_x, shift_y, screen_width, screen_height):
+        background_width = self.background.image.get_width()
+        background_height = self.background.image.get_height()
         self.x_shift += shift_x
         self.y_shift += shift_y
-        if self.x_shift > 0:
-            self.x_shift = 0
-        elif self.x_shift < -(self.width - screen_width) and self.width > screen_width:
-            self.x_shift = -(self.width - screen_width)
-        if self.y_shift > 0:
-            self.y_shift = 0
-        elif self.y_shift < -(self.height - screen_height + 80) and self.height > screen_height:
-            self.y_shift = -(self.height - screen_height + 80)
+        if self.y_shift < -(background_height - 40):
+            self.y_shift = -(background_height - 40)
+        elif self.y_shift > screen_height + -40:
+            self.y_shift = screen_height + -40
+        if self.x_shift < -(background_width - 40):
+            self.x_shift = -(background_width - 40)
+        if self.x_shift > screen_width + -40:
+            self.x_shift = screen_width + -40
 
     def draw_to_screen(self, screen):
         background_x_middle = self.background.rect.left + (self.background.image.get_width()) / 2
-
+        objects_to_draw = queue.PriorityQueue()
         for each in self.bars:
             screen_coordinates = utilities.get_screen_coords(each.tile_x,
                                                              each.tile_y,
@@ -65,39 +68,10 @@ class Map(object):
                                                              self.y_shift,
                                                              self.background.rect.top,
                                                              background_x_middle)
-            screen.blit(each.sprite.image, [screen_coordinates[0] + self.x_shift, screen_coordinates[1] - 86 + self.y_shift])
+            objects_to_draw.put((screen_coordinates[1], screen_coordinates[0], each))
 
-    def y_based_draw_to_screen(self, screen):
-        background_x_middle = self.background.rect.left + (self.background.image.get_width()) / 2
-        objects_to_draw = {}
-        for number in range(1000):
-            objects_to_draw[number] = []
-
-        for each in self.bars:
-            for each in self.bars:
-                screen_coordinates = utilities.get_screen_coords(each.tile_x,
-                                                                 each.tile_y,
-                                                                 self.x_shift,
-                                                                 self.y_shift,
-                                                                 self.background.rect.top,
-                                                                 background_x_middle)
-            objects_to_draw[screen_coordinates[1]].append(each)
-        rows_to_draw = []
-        for y_level in range(self.background.rect.bottom - self.background.rect.top):
-            this_row = []
-            for key in objects_to_draw:
-                if key == y_level:
-                    this_row = (objects_to_draw[key])
-            rows_to_draw.append(this_row)
-
-        for row in rows_to_draw:
-            for entity in row:
-                screen_coordinates = utilities.get_screen_coords(each.tile_x,
-                                                                 each.tile_y,
-                                                                 self.x_shift,
-                                                                 self.y_shift,
-                                                                 self.background.rect.top,
-                                                                 background_x_middle)
-                screen.blit(entity.sprite.image, [(screen_coordinates[0] + self.x_shift),
-                                                  (screen_coordinates[1] - 86 + self.y_shift)])
+        while not objects_to_draw.empty():
+            y, x, bar = objects_to_draw.get()
+            screen.blit(bar.sprite.image, [(x + self.x_shift),
+                                           (y - 86 + self.y_shift)])
 

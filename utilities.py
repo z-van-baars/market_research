@@ -209,8 +209,6 @@ def get_map_coords(x_shift, y_shift, pos, background_left, background_top, backg
     y = (y_true / 7 - x_true / 20) / 2
     x = int(x)
     y = int(y)
-    print(pos)
-    print(x, y)
     return (x, y)
 
 

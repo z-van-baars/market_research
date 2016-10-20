@@ -10,7 +10,42 @@ pygame.init()
 pygame.display.set_mode([0, 0])
 
 
+def do_nothing(game_state):
+    pass
 
+
+def up_key(game_state):
+    game_state.active_map.world_scroll(0,
+                                       20,
+                                       game_state.screen_width,
+                                       game_state.screen_height)
+
+
+def down_key(game_state):
+    game_state.active_map.world_scroll(0,
+                                       -20,
+                                       game_state.screen_width,
+                                       game_state.screen_height)
+
+
+def left_key(game_state):
+    game_state.active_map.world_scroll(20,
+                                       0,
+                                       game_state.screen_width,
+                                       game_state.screen_height)
+
+
+def right_key(game_state):
+    game_state.active_map.world_scroll(-20,
+                                       0,
+                                       game_state.screen_width,
+                                       game_state.screen_height)
+
+
+key_functions = {pygame.K_UP: up_key,
+                 pygame.K_DOWN: down_key,
+                 pygame.K_LEFT: left_key,
+                 pygame.K_RIGHT: right_key}
 
 
 def main(game_state):
@@ -19,13 +54,13 @@ def main(game_state):
     done = False
 
     Bar(4, 4, 1, game_state.active_map)
+    background_width = game_state.active_map.background.image.get_width()
+    background_height = game_state.active_map.background.image.get_height()
+    game_state.active_map.x_shift = game_state.screen_width / 2 - background_width / 2
+    game_state.active_map.y_shift = game_state.screen_height / 2 - (background_height / 2)
 
     while not done:
         population = 0
-        background_width = game_state.active_map.background.image.get_width()
-        background_height = game_state.active_map.background.image.get_height()
-        game_state.active_map.x_shift = game_state.screen_width / 2 - background_width / 2
-        game_state.active_map.y_shift = game_state.screen_height / 2 - (background_height / 2)
         background_left = 0
         background_left += game_state.active_map.x_shift
         background_top = 0
@@ -55,6 +90,8 @@ def main(game_state):
                                              mouse_pos):
                     if selected_tile is not None and selected_tile.bar is None:
                         Bar(map_xy[0], map_xy[1], 1, game_state.active_map)
+            elif event.type == pygame.KEYDOWN:
+                key_functions.get(event.key, do_nothing)(game_state)
 
         for each in game_state.active_map.bars:
             each.tick_cycle(game_state.active_map)
